@@ -24,7 +24,7 @@ DROP TABLE IF EXISTS public.borrow;
 -- -----------------------------------------------------
 
 CREATE TABLE public.user(
-    user_id SERIAL,
+    user_id SERIAL NOT NULL,
     name VARCHAR(64) NOT NULL,
     surname VARCHAR(64) NOT NULL,
     password VARCHAR(64) NOT NULL,
@@ -32,20 +32,20 @@ CREATE TABLE public.user(
 ALTER TABLE public.user OWNER TO postgres;
 
 CREATE TABLE public.state(
-    state_id INTEGER NOT NULL,
+    state_id SERIAL NOT NULL,
     name VARCHAR(64) NOT NULL,
     PRIMARY KEY(state_id));
 ALTER TABLE public.state OWNER TO postgres;
 
 CREATE TABLE public.contact_r(
-    contact_r_id INTEGER NOT NULL,
+    contact_r_id SERIAL NOT NULL,
     mail VARCHAR(128) NOT NULL,
     phone INTEGER NULL,
     PRIMARY KEY(contact_r_id));
 ALTER TABLE public.contact_r OWNER TO postgres;
 
 CREATE TABLE public.contact_w(
-    contact_w_id INTEGER NOT NULL,
+    contact_w_id SERIAL NOT NULL,
     mail VARCHAR(128)NOT NULL,
     phone INTEGER NOT NULL,
     photo VARCHAR(128) NULL,
@@ -53,8 +53,8 @@ CREATE TABLE public.contact_w(
 ALTER TABLE public.contact_w OWNER TO postgres;
 
 CREATE TABLE public.address(
-    address_id INTEGER NOT NULL,
-    state_id INTEGER NOT NULL,
+    address_id SERIAL NOT NULL,
+    state_id SERIAL NOT NULL,
     city VARCHAR(64) NOT NULL,
     street VARCHAR(64) NOT NULL,
     zipcode VARCHAR(32) NOT NULL,
@@ -68,11 +68,11 @@ CREATE TABLE public.address(
 ALTER TABLE public.address OWNER TO postgres;
 
 CREATE TABLE public.reader(
-    reader_id INTEGER NOT NULL,
+    reader_id SERIAL NOT NULL,
     first_name VARCHAR(64) NOT NULL,
     surname VARCHAR(64) NOT NULL,
-    address_id INTEGER NOT NULL,
-    contact_r_id INTEGER NOT NULL,
+    address_id SERIAL NOT NULL,
+    contact_r_id SERIAL NOT NULL,
     CONSTRAINT fk_reader_address
         FOREIGN KEY (address_id)
         REFERENCES public.address (address_id)
@@ -87,9 +87,9 @@ CREATE TABLE public.reader(
 ALTER TABLE public.reader OWNER TO postgres;
 
 CREATE TABLE public.library(
-    library_id INTEGER NOT NULL,
+    library_id SERIAL NOT NULL,
     name VARCHAR(64) NOT NULL,
-    address_id INTEGER NOT NULL,
+    address_id SERIAL NOT NULL,
     CONSTRAINT fk_library_address
         FOREIGN KEY (address_id)
         REFERENCES public.address (address_id)
@@ -99,20 +99,20 @@ CREATE TABLE public.library(
 ALTER TABLE public.library OWNER TO postgres;
 
 CREATE TABLE public.role(
-    role_id INTEGER NOT NULL,
+    role_id SERIAL NOT NULL,
     role VARCHAR(64) NOT NULL,
     salary INTEGER NOT NULL,
     PRIMARY KEY(role_id));
 ALTER TABLE public.role OWNER TO postgres;
 
 CREATE TABLE public.worker(
-    worker_id INTEGER NOT NULL,
+    worker_id SERIAL NOT NULL,
     first_name VARCHAR(64) NOT NULL,
     surname VARCHAR(64) NOT NULL,
-    role_id INTEGER NOT NULL,
-    library_id INTEGER NOT NULL,
-    address_id INTEGER NOT NULL,
-    contact_w_id INTEGER NOT NULL,
+    role_id SERIAL NOT NULL,
+    library_id SERIAL NOT NULL,
+    address_id SERIAL NOT NULL,
+    contact_w_id SERIAL NOT NULL,
     CONSTRAINT fk_worker_role
         FOREIGN KEY (role_id)
         REFERENCES public.role (role_id)
@@ -137,29 +137,29 @@ CREATE TABLE public.worker(
 ALTER TABLE public.worker OWNER TO postgres;
 
 CREATE TABLE public.type(
-    type_id INTEGER NOT NULL,
+    type_id SERIAL NOT NULL,
     type VARCHAR(32) NOT NULL,
     PRIMARY KEY(type_id));
 ALTER TABLE public.type OWNER TO postgres;
 
 CREATE TABLE public.writer(
-    writer_id INTEGER NOT NULL,
+    writer_id SERIAL NOT NULL,
     first_name VARCHAR(64) NOT NULL,
     surname VARCHAR(64) NOT NULL,
     PRIMARY KEY(writer_id));
 ALTER TABLE public.writer OWNER TO postgres;
 
 CREATE TABLE public.book(
-    book_id INTEGER NOT NULL,
+    book_id SERIAL NOT NULL,
     title VARCHAR(64) NOT NULL,
     public_year SMALLINT NULL,
     PRIMARY KEY(book_id));
 ALTER TABLE public.book OWNER TO postgres;
 
 CREATE TABLE public.bookwriter(
-    bookwriter_id INTEGER NOT NULL,
-    book_id INTEGER NOT NULL,
-    writer_id INTEGER NOT NULL,
+    bookwriter_id SERIAL NOT NULL,
+    book_id SERIAL NOT NULL,
+    writer_id SERIAL NOT NULL,
     CONSTRAINT fk_bookwriter_book
         FOREIGN KEY (book_id)
         REFERENCES public.book (book_id)
@@ -174,9 +174,9 @@ CREATE TABLE public.bookwriter(
 ALTER TABLE public.bookwriter OWNER TO postgres;
 
 CREATE TABLE public.booktype(
-    booktype_id INTEGER NOT NULL,
-    book_id INTEGER NOT NULL,
-    type_id INTEGER NOT NULL,
+    booktype_id SERIAL NOT NULL,
+    book_id SERIAL NOT NULL,
+    type_id SERIAL NOT NULL,
     CONSTRAINT fk_booktype_book
         FOREIGN KEY (book_id)
         REFERENCES public.book (book_id)
@@ -192,11 +192,11 @@ ALTER TABLE public.booktype OWNER TO postgres;
 
 
 CREATE TABLE public.borrow(
-    borrow_id INTEGER NOT NULL,
+    borrow_id SERIAL NOT NULL,
     borrow_date TIMESTAMP NOT NULL,
     return_date TIMESTAMP NULL,
-    book_id INTEGER NOT NULL,
-    reader_id INTEGER NOT NULL,
+    book_id SERIAL NOT NULL,
+    reader_id SERIAL NOT NULL,
     CONSTRAINT fk_borrow_book
         FOREIGN KEY (book_id)
         REFERENCES public.book (book_id)
@@ -233,6 +233,13 @@ INSERT INTO public.contact_w (mail, phone) VALUES ('d_optal@library.com', 555525
 INSERT INTO public.contact_w (mail, phone) VALUES ('m_personal@library.com', 123456);
 INSERT INTO public.contact_w (mail, phone) VALUES ('g_query@library.com', 65432);
 
+INSERT INTO public.state(name) VALUES ('Czech');
+INSERT INTO public.state(name) VALUES ('England');
+INSERT INTO public.state(name) VALUES ('Rome');
+INSERT INTO public.state(name) VALUES ('Spain');
+INSERT INTO public.state(name) VALUES ('Finland');
+INSERT INTO public.state(name) VALUES ('Austria');
+INSERT INTO public.state(name) VALUES ('Hungary');
 
 INSERT INTO public.address(state_id, city, street, zipcode, house_number) VALUES (2,'London', 'Endless', 'E1 7AY', '1758');
 INSERT INTO public.address(state_id, city, street, zipcode, house_number) VALUES (1,'Prague', 'Old Town Square', '602 00', '456');
@@ -286,13 +293,7 @@ INSERT INTO public.address(state_id, city, street, zipcode, house_number) VALUES
 INSERT INTO public.address(state_id, city, street, zipcode, house_number) VALUES (7,'Trnava', 'Slovenska', '556 789', '604');
 INSERT INTO public.address(state_id, city, street, zipcode, house_number) VALUES (7,'Bratislava', 'Polska', '123 546', '789');
 
-INSERT INTO public.state(name) VALUES ('Czech');
-INSERT INTO public.state(name) VALUES ('England');
-INSERT INTO public.state(name) VALUES ('Rome');
-INSERT INTO public.state(name) VALUES ('Spain');
-INSERT INTO public.state(name) VALUES ('Finland');
-INSERT INTO public.state(name) VALUES ('Austria');
-INSERT INTO public.state(name) VALUES ('Hungary');
+
 
 
 INSERT INTO public.reader(first_name, surname, address_id, contact_r_id) VALUES ('Kevin', 'Minion', 6, 1);
@@ -316,10 +317,10 @@ INSERT INTO public.role (role, salary) VALUES ('Charlady', 14500);
 INSERT INTO public.role (role, salary) VALUES ('Receptionist', 19000);
 
 
-INSERT INTO public.worker (first_name, surname, role_id, library_id, address_id, contact_w_id) VALUES ('Anna', 'Marie', 1, 1, 1, 1);
-INSERT INTO public.worker (first_name, surname, role_id, library_id, address_id, contact_w_id) VALUES ('Martin', 'Newmann', 1, 2, 2, 2);
-INSERT INTO public.worker (first_name, surname, role_id, library_id, address_id, contact_w_id) VALUES ('Daniel', 'Optal', 2, 1, 3, 3);
-INSERT INTO public.worker (first_name, surname, role_id, library_id, address_id, contact_w_id) VALUES ('Miguel', 'Personal', 3, 3, 5, 4);
+INSERT INTO public.worker (first_name, surname, role_id, library_id, address_id, contact_w_id) VALUES ('Anna', 'Marie', 1, 3, 1, 1);
+INSERT INTO public.worker (first_name, surname, role_id, library_id, address_id, contact_w_id) VALUES ('Martin', 'Newmann', 1, 3, 2, 2);
+INSERT INTO public.worker (first_name, surname, role_id, library_id, address_id, contact_w_id) VALUES ('Daniel', 'Optal', 2, 3, 3, 3);
+INSERT INTO public.worker (first_name, surname, role_id, library_id, address_id, contact_w_id) VALUES ('Miguel', 'Personal', 4, 3, 5, 4);
 INSERT INTO public.worker (first_name, surname, role_id, library_id, address_id, contact_w_id) VALUES ('George', 'Query', 5, 4, 4, 5);
 
 
@@ -407,6 +408,5 @@ INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES 
 INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES ('2016-03-23', '2016-04-19', 3, 2);
 INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES ('2017-06-13', '2017-08-14', 5, 5);
 INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES ('2017-08-27', '2017-09-19', 2, 3);
-INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES ('2017-09-31', '2017-12-23', 4, 4);
-
+INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES ('2017-08-27', '2017-10-19', 3, 3);
 
