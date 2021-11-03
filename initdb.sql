@@ -410,3 +410,25 @@ INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES 
 INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES ('2017-08-27', '2017-09-19', 2, 3);
 INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES ('2017-08-27', '2017-10-19', 3, 3);
 
+-- -----------------------------------------------------
+-- QUERIES
+-- -----------------------------------------------------
+SELECT city, street FROM public.address;
+
+SELECT r.first_name, r.surname
+    FROM public.reader r
+    JOIN public.contact_r cr ON r.contact_r_id = cr.contact_r_id
+    WHERE cr.mail = 'fluffyunicorn@emailaddress.com';
+
+UPDATE public.role SET salary = salary + 1750;
+SELECT role, salary FROM public.role;
+
+SELECT first_name, surname FROM public.writer;
+INSERT INTO public.writer(first_name, surname) VALUES ('Squilliam', 'Fancyson');
+
+SELECT writer_id, first_name, surname FROM public.writer;
+DELETE FROM public.writer WHERE writer_id = 6;
+
+ALTER TABLE public.writer ADD COLUMN birth_year SMALLINT;
+SELECT * FROM public.writer;
+
