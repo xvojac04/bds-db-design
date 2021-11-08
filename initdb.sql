@@ -225,13 +225,16 @@ INSERT INTO public.contact_r (mail, phone) VALUES ('fluffyunicorn@emailaddress.c
 INSERT INTO public.contact_r (mail, phone) VALUES ('happy_doplhin@seznam.cz', 774071309);
 INSERT INTO public.contact_r (mail, phone) VALUES ('bigmouse@google.com', 774071309);
 INSERT INTO public.contact_r (mail, phone) VALUES ('small_lizard@google.com', 774071309);
-
+INSERT INTO public.contact_r (mail, phone) VALUES ('m_personal@library.com', 123456);
+INSERT INTO public.contact_r (mail, phone) VALUES ('g_query@library.com', 65432);
 
 INSERT INTO public.contact_w (mail, phone, photo) VALUES ('a_marie@library.com', 41522322, 'C:/workers/marie.jpg');
 INSERT INTO public.contact_w (mail, phone, photo) VALUES ('m_newmann@library.com', 774071, 'C:/workers/newmann.jpg');
 INSERT INTO public.contact_w (mail, phone) VALUES ('d_optal@library.com', 555525);
 INSERT INTO public.contact_w (mail, phone) VALUES ('m_personal@library.com', 123456);
 INSERT INTO public.contact_w (mail, phone) VALUES ('g_query@library.com', 65432);
+INSERT INTO public.contact_w (mail, phone) VALUES ('little_puppy@email.com', 774071309);
+INSERT INTO public.contact_w (mail, phone) VALUES ('fluffyunicorn@emailaddress.com', 774071309);
 
 INSERT INTO public.state(name) VALUES ('Czech');
 INSERT INTO public.state(name) VALUES ('England');
@@ -413,22 +416,113 @@ INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES 
 -- -----------------------------------------------------
 -- QUERIES
 -- -----------------------------------------------------
+-- 1.1
 SELECT city, street FROM public.address;
 
+-- 1.2
 SELECT r.first_name, r.surname
     FROM public.reader r
     JOIN public.contact_r cr ON r.contact_r_id = cr.contact_r_id
     WHERE cr.mail = 'fluffyunicorn@emailaddress.com';
 
+SELECT w.first_name, w.surname
+    FROM public.worker w
+    JOIN public.contact_w cw ON w.contact_w_id = cw.contact_w_id
+    WHERE cw.mail = 'm_newmann@library.com';
+
+-- 1.3
 UPDATE public.role SET salary = salary + 1750;
 SELECT role, salary FROM public.role;
 
+-- 1.4
 SELECT first_name, surname FROM public.writer;
 INSERT INTO public.writer(first_name, surname) VALUES ('Squilliam', 'Fancyson');
 
+-- 1.5
 SELECT writer_id, first_name, surname FROM public.writer;
 DELETE FROM public.writer WHERE writer_id = 6;
 
+-- 1.6
 ALTER TABLE public.writer ADD COLUMN birth_year SMALLINT;
 SELECT * FROM public.writer;
+
+-- 1.7
+SELECT r.first_name, r.surname FROM public.reader r WHERE surname = 'Ogre';
+
+-- 1.8
+SELECT title FROM public.book WHERE title LIKE '%Potter%';
+SELECT city FROM public.address WHERE city NOT LIKE 'Brno';
+
+-- 1.9
+SELECT surname, SUBSTRING(first_name, 1, 1) FROM public.writer;
+
+
+-- 1.10
+SELECT COUNT(b.title), b.public_year
+    FROM public.book b
+    GROUP BY b.public_year
+    ORDER BY b.public_year;
+
+SELECT w.library_id,SUM(r.salary)
+    FROM public.role r
+    JOIN public.worker w ON r.role_id =w.role_id
+    GROUP BY w.library_id;
+
+SELECT MIN(salary) AS min_salary FROM public.role;
+SELECT MAX(salary) AS max_salary FROM public.role;
+SELECT AVG(salary) AS avg_salary FROM public.role;
+
+-- 1.11
+SELECT library_id, COUNT(worker_id) AS num_of_empl
+    FROM public.worker
+    GROUP BY library_id;
+
+SELECT library_id, COUNT(worker_id) AS num_of_empl
+    FROM public.worker
+    GROUP BY library_id
+    HAVING COUNT(worker_id)>1;
+
+SELECT public_year, COUNT(title)
+    FROM public.book
+    WHERE public_year > 1999
+    GROUP BY public_year
+    HAVING COUNT(title)>1;
+
+-- 1.12
+SELECT mail, phone FROM contact_r
+UNION ALL
+SELECT mail, phone FROM contact_w;
+
+-- 1.16
+INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES ('2021-11-08', '2022-10-19', 3, 3);
+INSERT INTO public.borrow (borrow_date, book_id, reader_id) VALUES ('2021-11-07', 4, 4);
+SELECT borrow_date, book_id, reader_id
+    FROM public.borrow
+    WHERE borrow_date > now() - interval '36 hours';
+
+-- 1.17
+INSERT INTO public.borrow (borrow_date, book_id, reader_id) VALUES ('2021-10-01', 12, 2);
+INSERT INTO public.borrow (borrow_date, book_id, reader_id) VALUES ('2021-10-31', 12, 2);
+SELECT borrow_date, book_id, reader_id
+    FROM public.borrow
+    WHERE borrow_date >= date_trunc('month', current_date - interval '1' month)
+        and borrow_date < date_trunc('month', current_date);
+
+-- 1.18
+INSERT INTO public.writer (first_name, surname, birth_year) VALUES ('Evžen', 'Houžvička', 1998);
+SELECT first_name, surname FROM public.writer;
+
+CREATE EXTENSION unaccent;
+SELECT first_name, surname FROM public.writer WHERE unaccent(first_name) = unaccent('Evžen');
+SELECT first_name, unaccent(surname) FROM public.writer WHERE unaccent(surname) = unaccent('Houžvička');
+SELECT unaccent('Evžen');
+UPDATE public.writer SET first_name = unaccent(first_name);
+
+-- 1.19
+SELECT city, street FROM public.address
+    ORDER BY address_id
+    LIMIT 5
+    OFFSET (2 - 1) * 5;
+
+
 
