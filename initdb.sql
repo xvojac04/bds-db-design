@@ -454,8 +454,12 @@ SELECT title FROM public.book WHERE title LIKE '%Potter%';
 SELECT city FROM public.address WHERE city NOT LIKE 'Brno';
 
 -- 1.9
-SELECT surname, SUBSTRING(first_name, 1, 1) FROM public.writer;
+INSERT INTO public.writer (first_name, surname, birth_year) VALUES ('   Maximus  ','  Horse',2000);
+UPDATE public.writer
+    SET first_name = TRIM (first_name), surname = TRIM (surname);
+SELECT first_name, surname FROM public.writer WHERE birth_year = 2000;
 
+SELECT surname, SUBSTRING(first_name, 1, 1) FROM public.writer;
 
 -- 1.10
 SELECT COUNT(b.title), b.public_year
@@ -493,6 +497,31 @@ SELECT mail, phone FROM contact_r
 UNION ALL
 SELECT mail, phone FROM contact_w;
 
+-- 1.13
+
+-- 1.14
+SELECT r.first_name, r.surname, cr.mail, cr.phone
+    FROM public.reader r
+    LEFT JOIN public.contact_r cr ON r.contact_r_id = cr.contact_r_id;
+
+SELECT r.first_name, r.surname, cr.mail, cr.phone
+    FROM public.reader r
+    RIGHT JOIN public.contact_r cr ON r.contact_r_id = cr.contact_r_id;
+
+SELECT b.title, t.type
+    FROM public.book b
+    FULL OUTER JOIN booktype bt ON b.book_id = bt.book_id
+    FULL OUTER JOIN type t ON bt.type_id = t.type_id;
+
+-- 1.15
+SELECT l.name, AVG(r.salary)
+    FROM public.library l
+    LEFT JOIN public.worker w ON l.library_id = w.library_id
+    LEFT JOIN public.role r ON w.role_id = r.role_id
+    GROUP BY l.name
+    HAVING AVG(r.salary) > 0
+    ORDER BY AVG(r.salary);
+
 -- 1.16
 INSERT INTO public.borrow (borrow_date, return_date, book_id, reader_id) VALUES ('2021-11-08', '2022-10-19', 3, 3);
 INSERT INTO public.borrow (borrow_date, book_id, reader_id) VALUES ('2021-11-07', 4, 4);
@@ -510,12 +539,10 @@ SELECT borrow_date, book_id, reader_id
 
 -- 1.18
 INSERT INTO public.writer (first_name, surname, birth_year) VALUES ('Evžen', 'Houžvička', 1998);
-SELECT first_name, surname FROM public.writer;
-
+SELECT first_name, surname FROM public.writer WHERE first_name = 'Evžen';
 CREATE EXTENSION unaccent;
-SELECT first_name, surname FROM public.writer WHERE unaccent(first_name) = unaccent('Evžen');
+
 SELECT first_name, unaccent(surname) FROM public.writer WHERE unaccent(surname) = unaccent('Houžvička');
-SELECT unaccent('Evžen');
 UPDATE public.writer SET first_name = unaccent(first_name);
 
 -- 1.19
@@ -524,5 +551,98 @@ SELECT city, street FROM public.address
     LIMIT 5
     OFFSET (2 - 1) * 5;
 
+-- 1.20
+SELECT abc.first_name, abc.surname, abc.city
+    FROM (SELECT w.first_name, w.surname, a.city, a.street, a.zipcode
+            FROM public.worker w
+            JOIN public.address a ON w.address_id = a.address_id) abc
+    WHERE zipcode = '606 06';
+
+-- 1.21
+SELECT w.first_name, w.surname, r.salary
+    FROM public.worker w
+    JOIN public.role r ON w.role_id = r.role_id
+    WHERE r.salary > (SELECT AVG(ro. salary) FROM public.role ro);
+
+-- 1.22
+SELECT l.name, COUNT(w.worker_id), AVG(r.salary) AS num_of_empl
+    FROM public.worker w
+    JOIN public.role r ON r.role_id = w.role_id
+    JOIN public.library l ON l.library_id = w.library_id
+    GROUP BY l.name
+    HAVING COUNT(w.worker_id) > 1;
+
+-- 1.23
+SELECT br.borrow_id, r.first_name, r.surname, bk.title, t.type, w.first_name AS AuthorName, w.surname AS AuthorSurname
+    FROM public.borrow br
+    JOIN public.reader r ON br.reader_id = r.reader_id
+    JOIN public.book bk ON br.book_id = bk.book_id
+    JOIN public.bookwriter bw ON bk.book_id =bw.book_id
+    JOIN public.writer w ON bw.writer_id = w.writer_id
+    JOIN public.booktype bt ON bk.book_id = bt.book_id
+    JOIN public.type t ON bt.type_id = t.type_id;
+
+-- 1.24
+SELECT l.name, COUNT(w.worker_id) AS num_of_empl
+    FROM public.worker w
+    JOIN public.library l ON w.library_id = l.library_id
+    JOIN public.role r ON r.role_id = w.role_id
+    WHERE r.salary > 15000
+    GROUP BY l.name
+    HAVING COUNT(w.worker_id) > 1;
+
+
+-- 2
+
+
+-- 3
+EXPLAIN SELECT b.borrow_id, b.borrow_date, b.book_id, b.reader_id FROM public.borrow b WHERE borrow_date = '2021-10-01';
+DROP INDEX IF EXISTS date_index;
+CREATE INDEX IF NOT EXISTS date_index ON public.borrow USING btree(borrow_date);
+CREATE INDEX IF NOT EXISTS date_index ON public.borrow(borrow_date);
+
+-- 4
+
+
+-- 5
+CREATE OR REPLACE FUNCTION salary_verification_func()
+    RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS
+$$
+BEGIN
+	IF NEW.salary < 0 THEN
+		    RAISE EXCEPTION 'Salary must be positive.';
+	END IF;
+	RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER salary_varification
+    BEFORE INSERT ON public.role
+    FOR EACH ROW EXECUTE PROCEDURE salary_verification_func();
+
+INSERT INTO role(salary) VALUES(-100);
+
+-- 6
+DROP VIEW IF EXISTS worker_info;
+CREATE VIEW worker_info
+    AS SELECT w.first_name, w.surname, l.name, cw.mail
+    FROM public.worker w
+    JOIN public.contact_w cw ON w.contact_w_id = cw.contact_w_id
+    JOIN public.library l ON w.library_id = l.library_id;
+SELECT * FROM worker_info;
+
+-- 7
+CREATE MATERIALIZED VIEW something AS SELECT ...;
+
+-- 8
+DROP ROLE IF EXISTS teacher;
+CREATE ROLE teacher NOSUPERUSER;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.role TO teacher;
+
+DROP ROLE IF EXISTS student;
+CREATE ROLE student NOSUPERUSER;
+GRANT SELECT ON public.borrow, public.book TO student;
 
 
