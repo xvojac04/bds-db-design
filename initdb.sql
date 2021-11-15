@@ -498,6 +498,8 @@ UNION ALL
 SELECT mail, phone FROM contact_w;
 
 -- 1.13
+SELECT DISTINCT city FROM public.address ORDER BY city;
+
 
 -- 1.14
 SELECT r.first_name, r.surname, cr.mail, cr.phone
@@ -593,15 +595,73 @@ SELECT l.name, COUNT(w.worker_id) AS num_of_empl
 
 
 -- 2
+DROP TABLE public.user;
+
+INSERT INTO public.reader(reader_id, first_name, surname, address_id, contact_r_id) VALUES(6, 'Mike','Wazovski',7,6);
+SELECT r.reader_id, r.first_name, r.surname, cr.mail, cr.phone
+    FROM public.reader r
+    FULL OUTER JOIN public.contact_r cr ON r.contact_r_id = cr.contact_r_id;
+
+ALTER TABLE public.reader ADD FOREIGN KEY (contact_r_id)
+    REFERENCES public.contact_r(contact_r_id) ON DELETE CASCADE;
+
+
+DELETE FROM public.reader WHERE surname = 'Wazovski';
 
 
 -- 3
-EXPLAIN SELECT b.borrow_id, b.borrow_date, b.book_id, b.reader_id FROM public.borrow b WHERE borrow_date = '2021-10-01';
 DROP INDEX IF EXISTS date_index;
 CREATE INDEX IF NOT EXISTS date_index ON public.borrow USING btree(borrow_date);
 CREATE INDEX IF NOT EXISTS date_index ON public.borrow(borrow_date);
+SELECT b.borrow_id, b.borrow_date, b.book_id, b.reader_id FROM public.borrow b WHERE borrow_date = '2021-10-01';
+
+DROP INDEX IF EXISTS return_date_index;
+CREATE INDEX IF NOT EXISTS return_date_index ON public.borrow USING btree(return_date);
+CREATE INDEX IF NOT EXISTS return_date_index ON public.borrow(return_date);
+SELECT b.borrow_id, b.borrow_date, b.book_id, b.reader_id FROM public.borrow b WHERE return_date = '2017-04-23';
+
+
+DROP INDEX IF EXISTS book_title_index;
+CREATE INDEX IF NOT EXISTS book_title_index ON public.book USING btree(title);
+CREATE INDEX IF NOT EXISTS book_title_index ON public.book(title);
+SELECT b.title FROM public.book b WHERE title LIKE 'How%';
+
+DROP INDEX IF EXISTS writer_surname_index;
+CREATE INDEX IF NOT EXISTS writer_surname_index ON public.writer USING btree(surname);
+CREATE INDEX IF NOT EXISTS writer_surname_index ON public.writer(surname);
+SELECT w.first_name, w.surname FROM public.writer w WHERE surname = 'Platon';
 
 -- 4
+DROP PROCEDURE IF EXISTS salary_change();
+CREATE OR REPLACE PROCEDURE salary_change ()
+language plpgsql
+as $$
+begin
+
+    UPDATE public.role
+    SET salary = salary + 0.5*salary
+    WHERE role_id = 2;
+
+    UPDATE public.role
+    SET salary = salary + 0.5*salary
+    WHERE role_id = 1;
+
+    UPDATE public.role
+    SET salary = salary + 0.25*salary
+    WHERE role_id = 3;
+
+    UPDATE public.role
+    SET salary = salary + 0.75*salary
+    WHERE role_id = 4;
+
+    UPDATE public.role
+    SET salary = salary + 0.5*salary
+    WHERE role_id = 5;
+
+    commit;
+end;$$;
+CALL salary_change();
+SELECT role, salary FROM public.role;
 
 
 -- 5
@@ -634,15 +694,33 @@ CREATE VIEW worker_info
 SELECT * FROM worker_info;
 
 -- 7
-CREATE MATERIALIZED VIEW something AS SELECT ...;
+DROP MATERIALIZED VIEW IF EXISTS mat_view_1;
+CREATE MATERIALIZED VIEW mat_view_1 AS SELECT w.first_name, w.surname, COUNT(b.title), t.type
+    FROM public.writer w
+    JOIN public.bookwriter bw ON w.writer_id = bw.writer_id
+    JOIN public.book b ON bw.book_id = b.book_id
+    JOIN public.booktype bt ON b.book_id = bt.book_id
+    JOIN public.type t ON bt.type_id = t.type_id
+    WHERE w.surname IS NOT NULL
+    GROUP BY w.first_name, w.surname, t.type
+    HAVING COUNT(b.title) > 0;
+SELECT * FROM mat_view_1;
 
 -- 8
 DROP ROLE IF EXISTS teacher;
 CREATE ROLE teacher NOSUPERUSER;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.role TO teacher;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.worker TO teacher;
+-- REVOKE all ON public.role FROM teacher;
+-- REVOKE all ON public.reader FROM teacher;
+-- REVOKE all on public.worker FROM teacher;
+GRANT SELECT (role) ON public.role TO teacher;
+GRANT SELECT (first_name) ON public.reader TO teacher;
+GRANT SELECT (surname) ON public.reader TO teacher;
 
 DROP ROLE IF EXISTS student;
 CREATE ROLE student NOSUPERUSER;
 GRANT SELECT ON public.borrow, public.book TO student;
+-- REVOKE all ON public.borrow FROM student;
+-- REVOKE all on public.book FROM student;
 
 
