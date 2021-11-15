@@ -597,16 +597,6 @@ SELECT l.name, COUNT(w.worker_id) AS num_of_empl
 -- 2
 DROP TABLE public.user;
 
-INSERT INTO public.reader(reader_id, first_name, surname, address_id, contact_r_id) VALUES(6, 'Mike','Wazovski',7,6);
-SELECT r.reader_id, r.first_name, r.surname, cr.mail, cr.phone
-    FROM public.reader r
-    FULL OUTER JOIN public.contact_r cr ON r.contact_r_id = cr.contact_r_id;
-
-ALTER TABLE public.reader ADD FOREIGN KEY (contact_r_id)
-    REFERENCES public.contact_r(contact_r_id) ON DELETE CASCADE;
-
-
-DELETE FROM public.reader WHERE surname = 'Wazovski';
 
 
 -- 3
