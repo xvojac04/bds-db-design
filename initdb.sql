@@ -81,8 +81,8 @@ CREATE TABLE public.reader(
     CONSTRAINT fk_reader_contact
         FOREIGN KEY (contact_r_id)
         REFERENCES public.contact_R (contact_r_id)
-        ON DELETE NO ACTION
-        ON UPDATE NO ACTION,
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
     PRIMARY KEY(reader_id));
 ALTER TABLE public.reader OWNER TO postgres;
 
@@ -131,8 +131,8 @@ CREATE TABLE public.worker(
     CONSTRAINT fk_worker_contact
         FOREIGN KEY (contact_w_id)
         REFERENCES public.contact_w (contact_w_id)
-        ON DELETE NO ACTION
-        ON UPDATE NO ACTION,
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
     PRIMARY KEY(worker_id));
 ALTER TABLE public.worker OWNER TO postgres;
 
@@ -596,7 +596,6 @@ SELECT l.name, COUNT(w.worker_id) AS num_of_empl
 
 -- 2
 DROP TABLE public.user;
-
 
 
 -- 3
